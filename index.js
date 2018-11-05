@@ -24,8 +24,8 @@ data.forEach(item => {
   let y1 = data[1].y + data[1].height;
   let y2 = data[2].y;
   let y3 = data[3] ? data[3].y : y2;
-  let xH = Math.min(x1, x3) - Math.max(x0, x2);
-  let yH = Math.min(y2, y3) - Math.max(y0, y1);
+  let distanceH = Math.min(x1, x3) - Math.max(x0, x2);
+  let distanceV = Math.min(y2, y3) - Math.max(y0, y1);
 
   let alignHStart0 = (Math.abs(data[0].y - data[1].y) < 1) ? 1 : 0;
   let alignHCenter0 = (Math.abs(data[0].y + data[0].height / 2 - data[1].y - data[1].height / 2) < 1) ? 1 : 0;
@@ -54,7 +54,7 @@ data.forEach(item => {
 
   x.push([
     typeH - typeV,
-    xH - yH,
+    distanceH - distanceV,
     alignH - alignV
   ]);
   y.push(classify);
@@ -134,8 +134,8 @@ data.forEach(item => {
   let y1 = data[1].y + data[1].height;
   let y2 = data[2].y;
   let y3 = data[3] ? data[3].y : y2;
-  let xH = Math.min(x1, x3) - Math.max(x0, x2);
-  let yH = Math.min(y2, y3) - Math.max(y0, y1);
+  let distanceH = Math.min(x1, x3) - Math.max(x0, x2);
+  let distanceV = Math.min(y2, y3) - Math.max(y0, y1);
 
   let alignHStart0 = (Math.abs(data[0].y - data[1].y) < 1) ? 1 : 0;
   let alignHCenter0 = (Math.abs(data[0].y + data[0].height / 2 - data[1].y - data[1].height / 2) < 1) ? 1 : 0;
@@ -165,7 +165,7 @@ data.forEach(item => {
   let x = [
     [
       typeH - typeV,
-      xH - yH,
+      distanceH - distanceV,
       alignH - alignV
     ]
   ];
