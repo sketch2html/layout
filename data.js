@@ -27,6 +27,7 @@ async function exec() {
   });
   let res = await basic.findAll({
     attributes: [
+      'id',
       'data',
       'row',
       'col',

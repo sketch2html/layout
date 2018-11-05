@@ -1,11 +1,31 @@
 const tf = require('@tensorflow/tfjs');
+const Sequelize = require('sequelize');
 
+const config = require('./config');
 const data = require('./data.json');
 
 const x = [];
 const y = [];
 data.forEach(item => {
   let { data, classify } = item;
+
+  let t0 = data[0].type > 0;
+  let t1 = data[1].type > 0;
+  let t2 = data[2].type > 0;
+  let t3 = data[3] ? data[3].type > 0 : null;
+  let typeH = ((t0 === t1 ? 1 : 0) + (t2 === t3 ? 1 : 0)) / 2;
+  let typeV = ((t0 === t2 ? 1 : 0) + (t1 === t3 ? 1 : 0)) / 2;
+
+  let x0 = data[0].x + data[0].width;
+  let x1 = data[1].x;
+  let x2 = data[2].x + data[2].width;
+  let x3 = data[3] ? data[3].x : x1;
+  let y0 = data[0].y + data[0].height;
+  let y1 = data[1].y + data[1].height;
+  let y2 = data[2].y;
+  let y3 = data[3] ? data[3].y : y2;
+  let xH = Math.min(x1, x3) - Math.max(x0, x2);
+  let yH = Math.min(y2, y3) - Math.max(y0, y1);
 
   let alignHStart0 = (Math.abs(data[0].y - data[1].y) < 1) ? 1 : 0;
   let alignHCenter0 = (Math.abs(data[0].y + data[0].height / 2 - data[1].y - data[1].height / 2) < 1) ? 1 : 0;
@@ -29,39 +49,14 @@ data.forEach(item => {
     alignVCenter1 = (Math.abs(data[1].x + data[1].width / 2 - data[3].x - data[3].width / 2) < 1) ? 1 : 0;
     alignVEnd1 = (Math.abs(data[1].x + data[1].width - data[3].x - data[3].width) < 1) ? 1 : 0;
   }
-  let alignV = (alignVStart0 + alignVCenter0 + alignVEnd0 + alignVStart1 + alignVCenter1 + alignVEnd1) / 6;
   let alignH = (alignHStart0 + alignHCenter0 + alignHEnd0 + alignHStart1 + alignHCenter1 + alignHEnd1) / 6;
+  let alignV = (alignVStart0 + alignVCenter0 + alignVEnd0 + alignVStart1 + alignVCenter1 + alignVEnd1) / 6;
 
-  let t0 = data[0].type > 0;
-  let t1 = data[1].type > 0;
-  let t2 = data[2].type > 0;
-  let t3 = data[3] ? data[3].type > 0 : null;
-
-  if(classify) {
-    let y0 = data[0].y + data[0].height;
-    let y1 = data[1].y + data[1].height;
-    let y2 = data[2].y;
-    let y3 = data[3] ? data[3].y : y2;
-
-    // 种类一致性；横竖；最短距离；对齐性变化
-    x.push([
-      ((t0 === t1 ? 1 : 0) + (t2 === t3 ? 1 : 0)) / 2,
-      Math.min(y2, y3) - Math.max(y0, y1),
-      alignV - alignH
-    ]);
-  }
-  else {
-    let x0 = data[0].x + data[0].width;
-    let x1 = data[1].x;
-    let x2 = data[2].x + data[2].width;
-    let x3 = data[3] ? data[3].x : x1;
-
-    x.push([
-      ((t0 === t2 ? 1 : 0) + (t1 === t3 ? 1 : 0)) / 2,
-      Math.min(x1, x3) - Math.max(x0, x2),
-      alignH - alignV
-    ]);
-  }
+  x.push([
+    typeH - typeV,
+    xH - yH,
+    alignH - alignV
+  ]);
   y.push(classify);
 });
 
@@ -87,7 +82,7 @@ const loss = (pred, label) => {
 const learningRate = 0.01;
 const optimizer = tf.train.adam(learningRate);
 
-for(let i = 0; i < 3000; i++) {
+for(let i = 0; i < 1000; i++) {
   optimizer.minimize(() => {
     const lossVar = loss(f(xs), ys);
     lossVar.print();
@@ -98,9 +93,49 @@ for(let i = 0; i < 3000; i++) {
 w.print();
 b.print();
 
+
+let basic = require('./model/layout/basic');
+let sequelize = new Sequelize('layout', config.db.username, config.db.password, {
+  host: config.db.host,
+  dialect: 'mysql',
+  define: {
+    freezeTableName: true,
+    underscored: true,
+    timestamps: false,
+    charset: 'utf8mb4',
+    dialectOptions: {
+      collate: 'utf8mb4_unicode_ci',
+    },
+  },
+});
+basic = basic({
+  Sequelize,
+  model: {
+    layout: sequelize,
+  },
+});
+
 let count = 0;
 data.forEach(item => {
-  let { data, classify } = item;
+  let { data, classify, id } = item;
+
+  let t0 = data[0].type > 0;
+  let t1 = data[1].type > 0;
+  let t2 = data[2].type > 0;
+  let t3 = data[3] ? data[3].type > 0 : null;
+  let typeH = ((t0 === t1 ? 1 : 0) + (t2 === t3 ? 1 : 0)) / 2;
+  let typeV = ((t0 === t2 ? 1 : 0) + (t1 === t3 ? 1 : 0)) / 2;
+
+  let x0 = data[0].x + data[0].width;
+  let x1 = data[1].x;
+  let x2 = data[2].x + data[2].width;
+  let x3 = data[3] ? data[3].x : x1;
+  let y0 = data[0].y + data[0].height;
+  let y1 = data[1].y + data[1].height;
+  let y2 = data[2].y;
+  let y3 = data[3] ? data[3].y : y2;
+  let xH = Math.min(x1, x3) - Math.max(x0, x2);
+  let yH = Math.min(y2, y3) - Math.max(y0, y1);
 
   let alignHStart0 = (Math.abs(data[0].y - data[1].y) < 1) ? 1 : 0;
   let alignHCenter0 = (Math.abs(data[0].y + data[0].height / 2 - data[1].y - data[1].height / 2) < 1) ? 1 : 0;
@@ -124,47 +159,29 @@ data.forEach(item => {
     alignVCenter1 = (Math.abs(data[1].x + data[1].width / 2 - data[3].x - data[3].width / 2) < 1) ? 1 : 0;
     alignVEnd1 = (Math.abs(data[1].x + data[1].width - data[3].x - data[3].width) < 1) ? 1 : 0;
   }
-  let alignV = (alignVStart0 + alignVCenter0 + alignVEnd0 + alignVStart1 + alignVCenter1 + alignVEnd1) / 6;
   let alignH = (alignHStart0 + alignHCenter0 + alignHEnd0 + alignHStart1 + alignHCenter1 + alignHEnd1) / 6;
+  let alignV = (alignVStart0 + alignVCenter0 + alignVEnd0 + alignVStart1 + alignVCenter1 + alignVEnd1) / 6;
 
-  let t0 = data[0].type > 0;
-  let t1 = data[1].type > 0;
-  let t2 = data[2].type > 0;
-  let t3 = data[3] ? data[3].type > 0 : null;
-
-  let x = [];
-
-  if(classify) {
-    let y0 = data[0].y + data[0].height;
-    let y1 = data[1].y + data[1].height;
-    let y2 = data[2].y;
-    let y3 = data[3] ? data[3].y : y2;
-
-    // 种类一致性；横竖；最短距离；对齐性变化
-    x.push([
-      ((t0 === t1 ? 1 : 0) + (t2 === t3 ? 1 : 0)) / 2,
-      Math.min(y2, y3) - Math.max(y0, y1),
-      alignV - alignH
-    ]);
-  }
-  else {
-    let x0 = data[0].x + data[0].width;
-    let x1 = data[1].x;
-    let x2 = data[2].x + data[2].width;
-    let x3 = data[3] ? data[3].x : x1;
-
-    x.push([
-      ((t0 === t2 ? 1 : 0) + (t1 === t3 ? 1 : 0)) / 2,
-      Math.min(x1, x3) - Math.max(x0, x2),
+  let x = [
+    [
+      typeH - typeV,
+      xH - yH,
       alignH - alignV
-    ]);
-  }
+    ]
+  ];
 
   let res = f(x);
-  let flag = res.get(0, 0) >= 0.5 ? 1 : 0;
-  if(flag === classify) {
+  let forecast = res.get(0, 0) >= 0.5 ? 1 : 0;
+  if(forecast === classify) {
     count++;
   }
+  basic.update({
+    forecast,
+  }, {
+    where: {
+      id,
+    },
+  });
 });
 
-console.log(count / data.length);
+console.warn('正确率', count / data.length);
