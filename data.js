@@ -3,7 +3,7 @@ const path = require('path');
 const Sequelize = require('sequelize');
 
 const config = require('./config');
-let basic = require('./model/layout/basic');
+let junior = require('./model/layout/junior');
 
 async function exec() {
   let sequelize = new Sequelize('layout', config.db.username, config.db.password, {
@@ -19,13 +19,13 @@ async function exec() {
       },
     },
   });
-  basic = basic({
+  junior = junior({
     Sequelize,
     model: {
       layout: sequelize,
     },
   });
-  let res = await basic.findAll({
+  let res = await junior.findAll({
     attributes: [
       'id',
       'data',
@@ -36,7 +36,7 @@ async function exec() {
     ],
     raw: true,
   });
-  fs.writeFileSync(path.join(__dirname, 'data.json'), JSON.stringify(res, null, 2), { encoding: 'utf-8' });
+  fs.writeFileSync(path.join(__dirname, 'junior.json'), JSON.stringify(res, null, 2), { encoding: 'utf-8' });
   console.warn('end');
 }
 exec();

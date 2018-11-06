@@ -2,7 +2,7 @@ const tf = require('@tensorflow/tfjs');
 const Sequelize = require('sequelize');
 
 const config = require('./config');
-const data = require('./data.json');
+const data = require('./junior.json');
 
 function parse(data) {
   let t0 = Math.min(data[0].type, 1);
@@ -136,7 +136,7 @@ w.print();
 b.print();
 
 
-let basic = require('./model/layout/basic');
+let junior = require('./model/layout/junior');
 let sequelize = new Sequelize('layout', config.db.username, config.db.password, {
   host: config.db.host,
   dialect: 'mysql',
@@ -150,7 +150,7 @@ let sequelize = new Sequelize('layout', config.db.username, config.db.password, 
     },
   },
 });
-basic = basic({
+junior = junior({
   Sequelize,
   model: {
     layout: sequelize,
@@ -166,7 +166,7 @@ data.forEach(item => {
   if(forecast === classify) {
     count++;
   }
-  basic.update({
+  junior.update({
     forecast,
   }, {
     where: {
