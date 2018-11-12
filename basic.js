@@ -1,9 +1,6 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
 const tf = require('@tensorflow/tfjs');
-const Sequelize = require('sequelize');
 
 const data = require('./basic.json');
 
