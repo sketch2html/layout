@@ -49,8 +49,6 @@ async function exec() {
     attributes: [
       'id',
       'data',
-      'row',
-      'col',
       'num',
       'classify'
     ],

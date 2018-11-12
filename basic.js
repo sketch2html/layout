@@ -2,7 +2,7 @@
 
 const tf = require('@tensorflow/tfjs');
 
-const data = require('./basic.json');
+const dataes = require('./basic.json');
 
 function parse(data, direction) {
   let length = data.length;
@@ -50,6 +50,7 @@ function parse(data, direction) {
   let fa = ft / length;
   let la = lt / length;
   let t = 0;
+  let da = 0;
   let d = 0;
   let w = 0;
   let h = 0;
@@ -59,12 +60,12 @@ function parse(data, direction) {
   let f = 0;
   let l = 0;
   if(direction) {
-    d = dt / (data[length - 1].x + data[length - 1].width);
+    da = dt / (length - 1);
   }
   else {
-    d = dt / (data[length - 1].y + data[length - 1].height);
+    da = dt / (length - 1);
   }
-  data.forEach(item => {
+  data.forEach((item, i) => {
     t += Math.abs(item.type - ta);
     w += Math.abs(item.width - wa);
     h += Math.abs(item.height - ha);
@@ -80,12 +81,24 @@ function parse(data, direction) {
       ac += Math.abs((item.x + item.width) * 0.5 - aca);
       ae += Math.abs(item.x + item.width - aea);
     }
+    if(i) {
+      let prev = data[i - 1];
+      if(direction) {
+        let n = item.x - prev.x - prev.width;
+        d += Math.abs(n - da);
+      }
+      else {
+        let n = item.y - prev.y - prev.height;
+        d += Math.abs(n - da);
+      }
+    }
   });
   t /= tt;
   if(tt === 0) {
     t = 0;
   }
   t /= length;
+  d /= dt;
   w /= wt;
   h /= ht;
   as /= ast;
@@ -110,9 +123,15 @@ function parse(data, direction) {
     l = 0;
   }
   l /= length;
-  let dn = d / length; // 间距数量比
-  let a = (as + ac + ae) / 3;
-  return [t, d, dn, w, h, a, f, l];
+  let dn = da / length; // 间距数量比
+  let dp = 0; //间距占总比
+  if(direction) {
+    dp = dt / (data[length - 1].x + data[length - 1].width);
+  }
+  else {
+    dp = dt / (data[length - 1].y + data[length - 1].height);
+  }
+  return [t, dp, d, dn, w, h, as, ac, ae, f, l];
 }
 
 const xh = [];
@@ -120,7 +139,7 @@ const xv = [];
 const yh = [];
 const yv = [];
 
-data.forEach(item => {
+dataes.forEach(item => {
   let { data, direction, classify } = item;
   if(direction) {
     xh.push(parse(data, direction));
@@ -141,9 +160,9 @@ const yvs = tf.tensor2d(yv, [yv.length, 1]);
 
 // xhs.print(); yhs.print(); xvs.print(); yvs.print();
 
-const wh = tf.variable(tf.zeros([8, 1]));
+const wh = tf.variable(tf.zeros([11, 1]));
 const bh = tf.variable(tf.scalar(0));
-const wv = tf.variable(tf.zeros([8, 1]));
+const wv = tf.variable(tf.zeros([11, 1]));
 const bv = tf.variable(tf.scalar(0));
 
 const fh = x => {
@@ -163,11 +182,11 @@ const loss = (pred, label, count) => {
   return cost.div(-count).sum();
 };
 
-const learningRate = 0.001;
+const learningRate = 0.1;
 const optimizer = tf.train.adam(learningRate);
 const optimizer2 = tf.train.adam(learningRate);
 
-for(let i = 0; i < 3000; i++) {
+for(let i = 0; i < 1000; i++) {
   optimizer.minimize(() => {
     const lossVar = loss(fh(xhs), yhs, yh.length);
     lossVar.print();
@@ -184,3 +203,38 @@ wh.print();
 bh.print();
 wv.print();
 bv.print();
+
+let count = 0;
+let countH = 0;
+let countV = 0;
+let totalH = 0;
+let totalV = 0;
+let list = [];
+dataes.forEach(item => {
+  let { id, data, direction, classify } = item;
+  if(direction) {
+    totalH++;
+  }
+  else {
+    totalV++;
+  }
+  let param = parse(data, direction);
+  let res = direction ? fh([param]) : fv([param]);
+  let forecast = res.get(0, 0) >= 0.5 ? 1 : 0;
+  if(forecast === classify) {
+    count++;
+    if(direction) {
+      countH++;
+    }
+    else {
+      countV++;
+    }
+  }
+  else {
+    list.push([id, direction]);
+  }
+});
+console.warn(`总正确率：${count / dataes.length}，行正确率：${countH / totalH}，列正确率：${countV / totalV}`);
+if(list.length) {
+  console.table(list);
+}
