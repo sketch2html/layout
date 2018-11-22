@@ -6,9 +6,9 @@ const Sequelize = require('sequelize');
 
 const config = require('./config');
 let basic = require('../website/app/model/layout/basic');
-let junior = require('../website/app/model/layout/junior');
 let row = require('../website/app/model/layout/row');
 let col = require('../website/app/model/layout/col');
+let junior = require('../website/app/model/layout/junior');
 
 async function exec() {
   let sequelize = new Sequelize('layout', config.db.username, config.db.password, {
@@ -30,12 +30,6 @@ async function exec() {
       layout: sequelize,
     },
   });
-  junior = junior({
-    Sequelize,
-    model: {
-      layout: sequelize,
-    },
-  });
   row = row({
     Sequelize,
     model: {
@@ -43,6 +37,12 @@ async function exec() {
     },
   });
   col = col({
+    Sequelize,
+    model: {
+      layout: sequelize,
+    },
+  });
+  junior = junior({
     Sequelize,
     model: {
       layout: sequelize,
@@ -59,15 +59,6 @@ async function exec() {
     raw: true,
   });
   fs.writeFileSync(path.join(__dirname, 'basic.json'), JSON.stringify(basicData, null, 2), { encoding: 'utf-8' });
-  let juniorData = await junior.findAll({
-    attributes: [
-      'id',
-      'data',
-      'classify'
-    ],
-    raw: true,
-  });
-  fs.writeFileSync(path.join(__dirname, 'junior.json'), JSON.stringify(juniorData, null, 2), { encoding: 'utf-8' });
   let rowData = await row.findAll({
     attributes: [
       'id',
@@ -90,6 +81,20 @@ async function exec() {
     raw: true,
   });
   fs.writeFileSync(path.join(__dirname, 'col.json'), JSON.stringify(colData, null, 2), { encoding: 'utf-8' });
+  let juniorData = await junior.findAll({
+    attributes: [
+      'id',
+      'data',
+      'row',
+      'col',
+      'type',
+      'area',
+      'types',
+      'classify'
+    ],
+    raw: true,
+  });
+  fs.writeFileSync(path.join(__dirname, 'junior.json'), JSON.stringify(juniorData, null, 2), { encoding: 'utf-8' });
 
   console.warn('end');
 }
