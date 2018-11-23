@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = function(data, row, col) {
+  let allText = 1;
   // 列类型平均一致性，每行的话算平均性，再算绝对差，再除以最大权值（假设全部为1），范围为[0, 0.5]
   let types = [];
   for(let i = 0; i < row; i++) {
@@ -8,6 +9,9 @@ module.exports = function(data, row, col) {
     for(let j = 0; j < col; j++) {
       let item = data[i * col + j];
       total += item.type;
+      if(item.type === 0) {
+        allText = 0;
+      }
     }
     let average = total / col;
     let sum = 0;
@@ -337,5 +341,5 @@ module.exports = function(data, row, col) {
     marginH = Math.max(marginH, diff);
   }
 
-  return [row, col, type, alignH, alignV, alignDiff, alignHDiff, alignVDiff, distance / ht, width, widthRow, widthRowDiff, height, heightRow, heightRowDiff, fontSize, fontSizeRow, fontSizeRowDiff, lineHeight, lineHeightRow, lineHeightRowDiff, marginH];
+  return [row, col, allText, type, alignH, alignV, alignDiff, alignHDiff, alignVDiff, distance / ht, width, widthRow, widthRowDiff, height, heightRow, heightRowDiff, fontSize, fontSizeRow, fontSizeRowDiff, lineHeight, lineHeightRow, lineHeightRowDiff, marginH];
 };

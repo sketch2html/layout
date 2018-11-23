@@ -87,9 +87,9 @@ async function exec() {
       'data',
       'row',
       'col',
-      'type',
+      'direction',
       'area',
-      'types',
+      'directions',
       'classify'
     ],
     raw: true,

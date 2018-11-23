@@ -17,7 +17,7 @@ dataes.forEach(item => {
 const xs = tf.tensor2d(x);
 const ys = tf.tensor2d(y, [y.length, 1]);
 
-const w = tf.variable(tf.zeros([22, 1]));
+const w = tf.variable(tf.zeros([23, 1]));
 const b = tf.variable(tf.scalar(0));
 
 const f = (x, w, b) => {
