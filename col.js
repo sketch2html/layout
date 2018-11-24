@@ -59,7 +59,7 @@ dataes.forEach(item => {
     count++;
   }
   else {
-    list.push([id, classify, forecast]);
+    list.push([id, classify, forecast, res.get(0, 0)]);
   }
 });
 console.warn(`正确率：${count / dataes.length}`);
